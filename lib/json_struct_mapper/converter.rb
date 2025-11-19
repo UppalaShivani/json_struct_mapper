@@ -43,6 +43,40 @@ module JsonStructMapper
       raise InvalidJSONError, "Failed to parse JSON: #{e.message}"
     end
 
+    # Create a Converter from a JSON file, initialising with nil values
+    # @param file_path [String] Path to the JSON file
+    # @return [Converter] new instance
+    # @raise [FileNotFoundError] if file doesn't exist
+    # @raise [InvalidJSONError] if JSON is malformed
+    def self.from_json_file_to_template(file_path, key = nil)
+      instance = new(file_path, key) # Create an instance of the class
+      struct = instance.send(:load_from_file, file_path, key) # Call the instance method
+      instance.instance_variable_set(:@object, instance.send(:reset_struct_values, struct))
+      instance
+    end
+
+    # Function to remove all values from a struct and initialize with nil
+    #
+    # @param struct [Struct] to convert
+    # @return [Struct] struct with nil values
+    def reset_struct_values(struct)
+      struct.members.each do |member|
+        value = struct[member]
+        if value.is_a?(Struct)
+          reset_struct_values(value) # Recursively reset nested structs
+        elsif value.is_a?(Array)
+          if value.any? { |item| item.is_a?(Struct) }
+            value.each { |item| reset_struct_values(item) if item.is_a?(Struct) } # Reset structs inside arrays
+          else
+            struct[member] = nil # Set the array to nil if it doesn't contain structs
+          end
+        else
+          struct[member] = nil
+        end
+      end
+      struct
+    end
+
     # Convert the struct object back to a hash
     #
     # @param compact [Boolean] whether to remove nil values
@@ -83,6 +117,7 @@ module JsonStructMapper
     # @return [Struct] converted struct
     def hash_to_struct(hash)
       return hash unless hash.is_a?(Hash)
+      return nil if hash.is_a?(Hash) && hash.empty? # Return nil for empty hashes
 
       struct_class = Struct.new(*hash.keys.map(&:to_sym))
       struct_class.new(*hash.values.map { |value| convert_value_to_struct(value) })
