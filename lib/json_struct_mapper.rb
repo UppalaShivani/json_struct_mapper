@@ -21,5 +21,10 @@ module JsonStructMapper
     def from_json(json_string, key = nil)
       Converter.from_json(json_string, key)
     end
+
+    # Convenience method to create a converter from a JSON file and creating template of it
+    def from_json_file_to_template(file_path, key = nil)
+      Converter.from_json_file_to_template(file_path, key)
+    end
   end
 end
