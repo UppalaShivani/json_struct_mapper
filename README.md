@@ -30,6 +30,19 @@ converter = JsonStructMapper.from_file('data.json', 'users')
 converter.object.name
 converter.object.email
 ```
+### From a JSON file and create a template of the json
+```ruby
+# Load entire JSON file
+converter = JsonStructMapper.from_json_file_to_template('data.json')
+
+# Load specific key from JSON file
+converter = JsonStructMapper.from_json_file_to_template('data.json', 'users')
+
+# Default struct values
+converter.object.name # => nil
+# Assign data via struct
+converter.object.name = 'Jhon'
+```
 ### From a Hash
 ```ruby
 hash = { name: 'John', age: 30, address: { city: 'NYC' } }
@@ -37,6 +50,13 @@ converter = JsonStructMapper.from_hash(hash)
 
 converter.object.name # => 'John'
 converter.object.address.city # => 'NYC'
+```
+empty hash will return nil value
+```ruby
+hash = { name: 'John', age: 30, address: {} }
+converter = JsonStructMapper.from_hash(hash)
+
+converter.object.address # => nil
 ```
 ### From a JSON string
 ```ruby
